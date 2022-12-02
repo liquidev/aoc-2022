@@ -4,9 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace]
-members = [
-    "day-1",
-]
+members = ["day-*"]
 
 [workspace.dependencies]
 aoc = { path = ".", version = "0.1.0" }
