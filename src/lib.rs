@@ -25,7 +25,7 @@ fn load_challenge() -> anyhow::Result<Challenge> {
 pub fn wrap_main(f: impl FnOnce(Challenge) -> anyhow::Result<()>) {
     env_logger::builder().format_timestamp(None).init();
 
-    match load_challenge().and_then(|challenge| f(challenge)) {
+    match load_challenge().and_then(f) {
         Ok(()) => (),
         Err(error) => {
             error!("{error:?}");

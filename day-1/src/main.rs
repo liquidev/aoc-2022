@@ -42,7 +42,7 @@ fn anyhow_main(challenge: Challenge) -> anyhow::Result<()> {
     println!("part 1: {part_1}");
 
     let mut elves = elves;
-    elves.sort_by(|a, b| a.cmp(&b).reverse());
+    elves.sort_by(|a, b| a.cmp(b).reverse());
     let part_2: usize = elves.iter().take(3).sum();
     println!("part 2: {part_2}");
 
