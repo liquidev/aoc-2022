@@ -18,7 +18,9 @@ pub struct Challenge {
 
 fn load_challenge() -> anyhow::Result<Challenge> {
     let args = ChallengeArgs::parse();
-    let input = std::fs::read_to_string(&args.input_file).context("read input file")?;
+    let input = std::fs::read_to_string(&args.input_file)
+        .context("read input file")?
+        .replace("\r\n", "\n");
     Ok(Challenge { input })
 }
 
