@@ -22,7 +22,7 @@ impl Reader {
     }
 }
 
-fn anyhow_main(challenge: Challenge) -> anyhow::Result<()> {
+fn challenge_main(challenge: Challenge) -> anyhow::Result<()> {
     let mut reader = Reader::default();
     for line in challenge.input.lines() {
         if line.is_empty() {
@@ -50,5 +50,5 @@ fn anyhow_main(challenge: Challenge) -> anyhow::Result<()> {
 }
 
 fn main() {
-    wrap_main(anyhow_main)
+    wrap_main(challenge_main)
 }

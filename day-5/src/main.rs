@@ -73,7 +73,7 @@ impl Crane {
     }
 }
 
-fn anyhow_main(challenge: Challenge) -> anyhow::Result<()> {
+fn challenge_main(challenge: Challenge) -> anyhow::Result<()> {
     let (stacks, instructions) = challenge.input.split_once("\n\n").ok_or_else(|| {
         anyhow!("input must be structured like: [initial stack]\\n\\n[instructions]")
     })?;
@@ -90,5 +90,5 @@ fn anyhow_main(challenge: Challenge) -> anyhow::Result<()> {
 }
 
 fn main() {
-    wrap_main(anyhow_main)
+    wrap_main(challenge_main)
 }

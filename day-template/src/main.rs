@@ -3,10 +3,10 @@ use aoc::{
     wrap_main, Challenge,
 };
 
-fn anyhow_main(challenge: Challenge) -> anyhow::Result<()> {
+fn challenge_main(challenge: Challenge) -> anyhow::Result<()> {
     Ok(())
 }
 
 fn main() {
-    wrap_main(anyhow_main)
+    wrap_main(challenge_main)
 }

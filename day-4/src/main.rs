@@ -26,7 +26,7 @@ fn partially_overlaps(a: &RangeInclusive<usize>, b: &RangeInclusive<usize>) -> b
     a.end() >= b.start() && b.end() >= a.start()
 }
 
-fn anyhow_main(challenge: Challenge) -> anyhow::Result<()> {
+fn challenge_main(challenge: Challenge) -> anyhow::Result<()> {
     let mut fully_overlapping = 0;
     let mut partially_overlapping = 0;
     for line in challenge.input.lines() {
@@ -42,5 +42,5 @@ fn anyhow_main(challenge: Challenge) -> anyhow::Result<()> {
 }
 
 fn main() {
-    wrap_main(anyhow_main)
+    wrap_main(challenge_main)
 }

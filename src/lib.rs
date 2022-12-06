@@ -5,29 +5,54 @@ use std::path::PathBuf;
 
 use anyhow::Context;
 use clap::Parser;
-use log::error;
+use log::{error, info, LevelFilter};
 
 #[derive(Parser)]
 struct ChallengeArgs {
-    input_file: PathBuf,
+    input_files: Vec<PathBuf>,
 }
 
 pub struct Challenge {
     pub input: String,
 }
 
-fn load_challenge() -> anyhow::Result<Challenge> {
-    let args = ChallengeArgs::parse();
-    let input = std::fs::read_to_string(&args.input_file)
-        .context("read input file")?
-        .replace("\r\n", "\n");
-    Ok(Challenge { input })
+struct LoadedChallenge {
+    filename: PathBuf,
+    inner: Challenge,
 }
 
-pub fn wrap_main(f: impl FnOnce(Challenge) -> anyhow::Result<()>) {
-    env_logger::builder().format_timestamp(None).init();
+fn load_challenges() -> anyhow::Result<Vec<LoadedChallenge>> {
+    let args = ChallengeArgs::parse();
+    let mut challenges = vec![];
+    for filename in args.input_files {
+        let input = std::fs::read_to_string(&filename)
+            .context("read input file")?
+            .replace("\r\n", "\n");
+        challenges.push(LoadedChallenge {
+            filename,
+            inner: Challenge { input },
+        });
+    }
+    Ok(challenges)
+}
 
-    match load_challenge().and_then(f) {
+fn run_challenges(mut f: impl FnMut(Challenge) -> anyhow::Result<()>) -> anyhow::Result<()> {
+    let challenges = load_challenges().context("cannot load challenges")?;
+    for (i, challenge) in challenges.into_iter().enumerate() {
+        info!("file #{}: {}", i + 1, challenge.filename.to_string_lossy());
+        f(challenge.inner)
+            .with_context(|| format!("file #{} {:?} failed", i + 1, challenge.filename))?;
+    }
+    Ok(())
+}
+
+pub fn wrap_main(f: impl FnMut(Challenge) -> anyhow::Result<()>) {
+    env_logger::builder()
+        .format_timestamp(None)
+        .filter_module("aoc", LevelFilter::Debug)
+        .init();
+
+    match run_challenges(f) {
         Ok(()) => (),
         Err(error) => {
             error!("{error:?}");

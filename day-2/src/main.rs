@@ -166,7 +166,7 @@ fn play_according_to_actual_plan(plan: &[ActualRound]) -> usize {
     plan.iter().map(|round| round.your_score()).sum()
 }
 
-fn anyhow_main(challenge: Challenge) -> anyhow::Result<()> {
+fn challenge_main(challenge: Challenge) -> anyhow::Result<()> {
     let move_plan = parse_assumed_move_plan(&challenge.input)?;
     let score = play_according_to_assumed_plan(&move_plan);
     println!("part 1 (assumed score): {score}");
@@ -179,5 +179,5 @@ fn anyhow_main(challenge: Challenge) -> anyhow::Result<()> {
 }
 
 fn main() {
-    wrap_main(anyhow_main)
+    wrap_main(challenge_main)
 }

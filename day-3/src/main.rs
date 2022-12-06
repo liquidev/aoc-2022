@@ -71,7 +71,7 @@ fn part_2(challenge: &Challenge) -> anyhow::Result<usize> {
     Ok(sum)
 }
 
-fn anyhow_main(challenge: Challenge) -> anyhow::Result<()> {
+fn challenge_main(challenge: Challenge) -> anyhow::Result<()> {
     let part_1 = part_1(&challenge)?;
     let part_2 = part_2(&challenge)?;
 
@@ -82,5 +82,5 @@ fn anyhow_main(challenge: Challenge) -> anyhow::Result<()> {
 }
 
 fn main() {
-    wrap_main(anyhow_main)
+    wrap_main(challenge_main)
 }
