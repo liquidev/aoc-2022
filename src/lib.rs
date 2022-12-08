@@ -10,10 +10,13 @@ use log::{error, info, LevelFilter};
 #[derive(Parser)]
 struct ChallengeArgs {
     input_files: Vec<PathBuf>,
+    #[clap(long)]
+    debug_output: bool,
 }
 
 pub struct Challenge {
     pub input: String,
+    pub debug_output: bool,
 }
 
 struct LoadedChallenge {
@@ -30,7 +33,10 @@ fn load_challenges() -> anyhow::Result<Vec<LoadedChallenge>> {
             .replace("\r\n", "\n");
         challenges.push(LoadedChallenge {
             filename,
-            inner: Challenge { input },
+            inner: Challenge {
+                input,
+                debug_output: args.debug_output,
+            },
         });
     }
     Ok(challenges)
