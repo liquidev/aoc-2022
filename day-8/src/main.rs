@@ -1,4 +1,4 @@
-use std::{convert::Infallible, ops::Index, str::FromStr};
+use std::{ops::Index, str::FromStr};
 
 use aoc::{
     anyhow::{self, anyhow, bail, Context},
@@ -133,7 +133,7 @@ fn challenge_main(challenge: Challenge) -> anyhow::Result<()> {
         .parse::<Forest>()
         .context("cannot parse forest")?;
 
-    if challenge.debug_output {
+    if challenge.debug_flags.contains("visibility") {
         for y in 0..forest.depth as i32 {
             for x in 0..forest.width as i32 {
                 print!("{}", if forest.is_visible((x, y)) { '#' } else { ' ' });
@@ -148,7 +148,7 @@ fn challenge_main(challenge: Challenge) -> anyhow::Result<()> {
         .count();
     println!("part 1: {visible_count}");
 
-    if challenge.debug_output {
+    if challenge.debug_flags.contains("scenic-score") {
         println!();
         for y in 0..forest.depth as i32 {
             for x in 0..forest.width as i32 {

@@ -1,7 +1,7 @@
 pub use anyhow;
 pub use log;
 
-use std::path::PathBuf;
+use std::{collections::HashSet, path::PathBuf};
 
 use anyhow::Context;
 use clap::Parser;
@@ -11,12 +11,12 @@ use log::{error, info, LevelFilter};
 struct ChallengeArgs {
     input_files: Vec<PathBuf>,
     #[clap(long)]
-    debug_output: bool,
+    debug: Vec<String>,
 }
 
 pub struct Challenge {
     pub input: String,
-    pub debug_output: bool,
+    pub debug_flags: HashSet<String>,
 }
 
 struct LoadedChallenge {
@@ -27,6 +27,7 @@ struct LoadedChallenge {
 fn load_challenges() -> anyhow::Result<Vec<LoadedChallenge>> {
     let args = ChallengeArgs::parse();
     let mut challenges = vec![];
+    let debug_flags: HashSet<String> = args.debug.iter().cloned().collect();
     for filename in args.input_files {
         let input = std::fs::read_to_string(&filename)
             .context("read input file")?
@@ -35,7 +36,7 @@ fn load_challenges() -> anyhow::Result<Vec<LoadedChallenge>> {
             filename,
             inner: Challenge {
                 input,
-                debug_output: args.debug_output,
+                debug_flags: debug_flags.clone(),
             },
         });
     }
