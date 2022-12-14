@@ -1,6 +1,6 @@
 //! Bitmap storage and parsing.
 
-use std::{ops::Index, str::FromStr};
+use std::ops::Index;
 
 use anyhow::{anyhow, bail};
 
@@ -19,6 +19,11 @@ impl<T> Bitmap<T> {
     pub fn is_in_bounds(&self, (x, y): (i32, i32)) -> bool {
         x >= 0 && x < self.width as i32 && y >= 0 && y < self.height as i32
     }
+
+    pub fn positions(&self) -> impl Iterator<Item = (i32, i32)> {
+        let &Bitmap { width, height, .. } = self;
+        (0..height).flat_map(move |y| (0..width).map(move |x| (x as i32, y as i32)))
+    }
 }
 
 impl<T> Index<(i32, i32)> for Bitmap<T> {
@@ -33,17 +38,18 @@ impl<T> Index<(i32, i32)> for Bitmap<T> {
     }
 }
 
-impl<T> FromStr for Bitmap<T>
+impl<T> Bitmap<T>
 where
-    T: BitmapElement + Default,
+    T: Default,
 {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    pub fn parse<P>(mut parser: P, s: &str) -> anyhow::Result<(Self, P)>
+    where
+        P: BitmapParser<Element = T>,
+    {
         let mut width: Option<u32> = None;
         let mut height = 0;
         let mut elements = vec![];
-        for line in s.lines() {
+        for (y, line) in s.lines().enumerate() {
             if let Some(width) = width {
                 if line.len() as u32 != width {
                     bail!(
@@ -51,24 +57,30 @@ where
                     );
                 }
             }
-            for c in line.chars() {
+            for (x, c) in line.chars().enumerate() {
                 elements.push(
-                    T::from_char(c)
+                    parser
+                        .parse_element((x as u32, y as u32), c)
                         .ok_or_else(|| anyhow!("{c:?} is not a valid bitmap element"))?,
                 );
             }
             width = Some(line.len() as u32);
             height += 1;
         }
-        Ok(Bitmap {
-            width: width.unwrap_or(0),
-            height,
-            elements,
-            out_of_bounds: Default::default(),
-        })
+        Ok((
+            Bitmap {
+                width: width.unwrap_or(0),
+                height,
+                elements,
+                out_of_bounds: Default::default(),
+            },
+            parser,
+        ))
     }
 }
 
-pub trait BitmapElement: Sized {
-    fn from_char(c: char) -> Option<Self>;
+pub trait BitmapParser {
+    type Element: Default;
+
+    fn parse_element(&mut self, position: (u32, u32), c: char) -> Option<Self::Element>;
 }

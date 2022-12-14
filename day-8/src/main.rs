@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use aoc::{
     anyhow::{self, anyhow, Context},
-    bitmap::{Bitmap, BitmapElement},
+    bitmap::{Bitmap, BitmapParser},
     wrap_main, Challenge,
 };
 
@@ -17,8 +17,12 @@ impl Tree {
     }
 }
 
-impl BitmapElement for Tree {
-    fn from_char(c: char) -> Option<Self> {
+struct TreeParser;
+
+impl BitmapParser for TreeParser {
+    type Element = Tree;
+
+    fn parse_element(&mut self, _: (u32, u32), c: char) -> Option<Self::Element> {
         Some(Tree {
             height: (c as u32) as u8 - b'0',
         })
@@ -92,7 +96,9 @@ impl FromStr for Forest {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self { bitmap: s.parse()? })
+        Ok(Self {
+            bitmap: Bitmap::parse(TreeParser, s)?.0,
+        })
     }
 }
 

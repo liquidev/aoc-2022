@@ -1,3 +1,4 @@
+pub mod astar;
 pub mod bitmap;
 
 pub use anyhow;
