@@ -41,7 +41,6 @@ enum Operation {
 
 impl Operation {
     fn eval(&self, old: WorryLevel) -> WorryLevel {
-        println!("{old}");
         match self {
             Operation::Add(x, y) => x.eval(old) + y.eval(old),
             Operation::Mul(x, y) => x.eval(old) * y.eval(old),
@@ -228,9 +227,10 @@ fn play_the_game(
     challenge: &Challenge,
     descriptors: &[MonkeyDescriptor],
     round_options: RoundOptions,
+    round_count: usize,
 ) -> usize {
     let mut game = KeepAway::new(descriptors);
-    for i in 1..=20 {
+    for i in 1..=round_count {
         game.play_round(round_options);
         if challenge.debug_flags.contains("rounds") {
             println!("round {i}: {game:#?}");
@@ -253,10 +253,20 @@ fn challenge_main(challenge: Challenge) -> anyhow::Result<()> {
         dbg!(&descriptors);
     }
 
-    let part_1 = play_the_game(&challenge, &descriptors, RoundOptions { relief_level: 3 });
+    let part_1 = play_the_game(
+        &challenge,
+        &descriptors,
+        RoundOptions { relief_level: 3 },
+        20,
+    );
     println!("part 1: {part_1}");
 
-    let part_2 = play_the_game(&challenge, &descriptors, RoundOptions { relief_level: 1 });
+    let part_2 = play_the_game(
+        &challenge,
+        &descriptors,
+        RoundOptions { relief_level: 1 },
+        10000,
+    );
     println!("part 2: {part_2}");
 
     Ok(())
