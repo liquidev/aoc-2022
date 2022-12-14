@@ -1,11 +1,12 @@
-use std::{ops::Index, str::FromStr};
+use std::str::FromStr;
 
 use aoc::{
-    anyhow::{self, anyhow, bail, Context},
+    anyhow::{self, anyhow, Context},
+    bitmap::{Bitmap, BitmapElement},
     wrap_main, Challenge,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 struct Tree {
     height: u8,
 }
@@ -16,76 +17,36 @@ impl Tree {
     }
 }
 
-#[derive(Debug, Clone)]
-struct Forest {
-    width: u32,
-    depth: u32,
-    trees: Vec<Tree>,
-}
-
-impl FromStr for Forest {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut width: Option<u32> = None;
-        let mut depth = 0;
-        let mut trees = vec![];
-        for line in s.lines() {
-            if let Some(width) = width {
-                if line.len() as u32 != width {
-                    bail!(
-                        "all lines must be the same width (first line's width was {width}): {line}"
-                    );
-                }
-            }
-            trees.extend(line.chars().map(|c| Tree {
-                height: (c as u32) as u8 - b'0',
-            }));
-            width = Some(line.len() as u32);
-            depth += 1;
-        }
-        Ok(Forest {
-            width: width.unwrap_or(0),
-            depth,
-            trees,
+impl BitmapElement for Tree {
+    fn from_char(c: char) -> Option<Self> {
+        Some(Tree {
+            height: (c as u32) as u8 - b'0',
         })
     }
 }
 
-impl Forest {
-    fn flatten_index(&self, (x, y): (i32, i32)) -> usize {
-        (x + y * self.width as i32) as usize
-    }
-
-    fn is_in_bounds(&self, (x, y): (i32, i32)) -> bool {
-        x >= 0 && x < self.width as i32 && y >= 0 && y < self.depth as i32
-    }
-}
-
-impl Index<(i32, i32)> for Forest {
-    type Output = Tree;
-
-    fn index(&self, index: (i32, i32)) -> &Self::Output {
-        if self.is_in_bounds(index) {
-            &self.trees[self.flatten_index(index)]
-        } else {
-            &Tree { height: 0 }
-        }
-    }
+struct Forest {
+    bitmap: Bitmap<Tree>,
 }
 
 impl Forest {
     fn is_visible(&self, (x, y): (i32, i32)) -> bool {
-        if x == 0 || y == 0 || x == self.width as i32 - 1 || y == self.depth as i32 - 1 {
+        if x == 0
+            || y == 0
+            || x == self.bitmap.width as i32 - 1
+            || y == self.bitmap.height as i32 - 1
+        {
             return true;
         }
 
-        let center = self[(x, y)];
+        let center = self.bitmap[(x, y)];
 
-        let left_visible = (-1..x).all(|xx| self[(xx, y)].exposes(&center));
-        let right_visible = (x + 1..=self.width as i32).all(|xx| self[(xx, y)].exposes(&center));
-        let top_visible = (-1..y).all(|yy| self[(x, yy)].exposes(&center));
-        let bottom_visible = (y + 1..=self.depth as i32).all(|yy| self[(x, yy)].exposes(&center));
+        let left_visible = (-1..x).all(|xx| self.bitmap[(xx, y)].exposes(&center));
+        let right_visible =
+            (x + 1..=self.bitmap.width as i32).all(|xx| self.bitmap[(xx, y)].exposes(&center));
+        let top_visible = (-1..y).all(|yy| self.bitmap[(x, yy)].exposes(&center));
+        let bottom_visible =
+            (y + 1..=self.bitmap.height as i32).all(|yy| self.bitmap[(x, yy)].exposes(&center));
 
         left_visible || right_visible || top_visible || bottom_visible
     }
@@ -93,20 +54,20 @@ impl Forest {
     /// Shoot a ray from (x, y) in the direction (dx, dy). Returns the number of steps taken before
     /// an obstruction is encountered.
     fn raycast(&self, (mut x, mut y): (i32, i32), (dx, dy): (i32, i32)) -> usize {
-        if !self.is_in_bounds((x + dx, y + dy)) {
+        if !self.bitmap.is_in_bounds((x + dx, y + dy)) {
             return 0;
         }
 
-        let center = self[(x, y)];
+        let center = self.bitmap[(x, y)];
         let mut steps = 0;
         loop {
             x += dx;
             y += dy;
-            if !self.is_in_bounds((x, y)) {
+            if !self.bitmap.is_in_bounds((x, y)) {
                 break;
             }
             steps += 1;
-            if !self[(x, y)].exposes(&center) {
+            if !self.bitmap[(x, y)].exposes(&center) {
                 break;
             }
         }
@@ -122,8 +83,16 @@ impl Forest {
     }
 
     fn positions(&self) -> impl Iterator<Item = (u32, u32)> {
-        let (width, depth) = (self.width, self.depth);
+        let (width, depth) = (self.bitmap.width, self.bitmap.height);
         (0..depth).flat_map(move |y| (0..width).map(move |x| (x, y)))
+    }
+}
+
+impl FromStr for Forest {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self { bitmap: s.parse()? })
     }
 }
 
@@ -134,8 +103,8 @@ fn challenge_main(challenge: Challenge) -> anyhow::Result<()> {
         .context("cannot parse forest")?;
 
     if challenge.debug_flags.contains("visibility") {
-        for y in 0..forest.depth as i32 {
-            for x in 0..forest.width as i32 {
+        for y in 0..forest.bitmap.height as i32 {
+            for x in 0..forest.bitmap.width as i32 {
                 print!("{}", if forest.is_visible((x, y)) { '#' } else { ' ' });
             }
             println!();
@@ -150,8 +119,8 @@ fn challenge_main(challenge: Challenge) -> anyhow::Result<()> {
 
     if challenge.debug_flags.contains("scenic-score") {
         println!();
-        for y in 0..forest.depth as i32 {
-            for x in 0..forest.width as i32 {
+        for y in 0..forest.bitmap.height as i32 {
+            for x in 0..forest.bitmap.width as i32 {
                 print!("{:4} ", forest.scenic_score((x, y)));
             }
             println!();

@@ -1,3 +1,5 @@
+pub mod bitmap;
+
 pub use anyhow;
 pub use log;
 
