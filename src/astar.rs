@@ -4,7 +4,6 @@ use std::{
     collections::{HashMap, HashSet},
     fmt::Debug,
     hash::Hash,
-    ops::Add,
 };
 
 pub struct AStar<'a, Node> {

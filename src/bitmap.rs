@@ -1,6 +1,6 @@
 //! Bitmap storage and parsing.
 
-use std::ops::Index;
+use std::ops::{Index, IndexMut};
 
 use anyhow::{anyhow, bail};
 
@@ -11,7 +11,22 @@ pub struct Bitmap<T> {
     pub out_of_bounds: T,
 }
 
+#[derive(Debug)]
+pub struct OutOfBoundsError;
+
 impl<T> Bitmap<T> {
+    pub fn new(width: u32, height: u32, blank: T) -> Self
+    where
+        T: Clone,
+    {
+        Self {
+            elements: vec![blank.clone(); (width * height) as usize],
+            width,
+            height,
+            out_of_bounds: blank,
+        }
+    }
+
     pub fn flatten_index(&self, (x, y): (i32, i32)) -> usize {
         (x + y * self.width as i32) as usize
     }
@@ -23,6 +38,16 @@ impl<T> Bitmap<T> {
     pub fn positions(&self) -> impl Iterator<Item = (i32, i32)> {
         let &Bitmap { width, height, .. } = self;
         (0..height).flat_map(move |y| (0..width).map(move |x| (x as i32, y as i32)))
+    }
+
+    pub fn set(&mut self, position: (i32, i32), value: T) -> Result<(), OutOfBoundsError> {
+        if self.is_in_bounds(position) {
+            let index = self.flatten_index(position);
+            self.elements[index] = value;
+            Ok(())
+        } else {
+            Err(OutOfBoundsError)
+        }
     }
 }
 

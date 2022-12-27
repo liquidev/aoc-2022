@@ -1,8 +1,10 @@
 pub mod astar;
 pub mod bitmap;
+pub mod math;
 
 pub use anyhow;
 pub use log;
+pub use owo_colors;
 
 use std::{collections::HashSet, path::PathBuf};
 
